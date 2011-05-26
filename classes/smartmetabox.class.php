@@ -1,6 +1,6 @@
 <?php
 
-class WP_SmartMetaBox {
+class SmartMetaBox {
 
     protected $prefix;
     protected $id;
@@ -40,7 +40,6 @@ class WP_SmartMetaBox {
     function __construct( $meta_box=null ) {
         $this->properties = $meta_box;
         $this->setup_properties();
-        var_dump( $this );
         $this->setup_hooks();
     }
 
@@ -109,6 +108,23 @@ class WP_SmartMetaBox {
     }
 
     function render_smart_meta_box() {
+        wp_nonce_field( basename( __FILE__ ), $this->prefix . 'nonce_field' );
+
+        echo "<table class='form-table'>";
+        foreach ( $this->properties['fields'] as $field ) {
+            echo "<tr>";
+            echo "  <td>";
+            echo "     <label for='{$field[name]}'>";
+            echo          $field['label'];
+            echo "      </label>";
+            echo "  </td>";
+            echo "  <td>";
+            echo "      <input type='{$field[type]}' name='{$field[name]}' size='{$field[size]}' value='{$field[value]}' />";
+            echo "      {$field[desc]}";
+            echo "  </td>";
+            echo "</tr>";
+        }
+        echo "</table>";
     }
 }
 ?>
