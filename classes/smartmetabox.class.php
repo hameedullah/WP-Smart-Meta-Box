@@ -7,6 +7,7 @@ class SmartMetaBox {
     protected $title;
     protected $pages;
     protected $post_ids;
+    protected $post_slugs;
     protected $callback;
     protected $callback_args;
     protected $context;
@@ -28,6 +29,7 @@ class SmartMetaBox {
         'title' => 'WP Smart Meta Box',
         'pages' => array( 'all' ),
         'post_ids' => array(),
+        'post_slugs' => array(),
         'callback' => '',
         'callback_args' => null,
         'context' => 'advanced',
@@ -101,11 +103,16 @@ class SmartMetaBox {
     }
 
     function add_smart_meta_box() {
+        global $post;
         if ( $this->post_ids ) {
-            global $post;
             if ( !in_array( $post->ID, $this->post_ids ) )
                 return false;
         }
+
+        if ( $this->post_slugs ) {
+            if ( $post->post_name != $this->post_slugs ) return false;
+        }
+
         foreach( $this->pages as $page ) {
             $this->instances += 1;
             add_meta_box(
@@ -127,6 +134,11 @@ class SmartMetaBox {
         if ( !wp_verify_nonce( @$_POST[$this->prefix . 'nonce_field'], basename( __FILE__ ) ) )
             return;
 
+        if ( $this->post_ids ) {
+            if ( !in_array( $post_id, $this->post_ids ) )
+                return false;
+        }
+
 
         foreach ( $this->properties['fields'] as $field ) {
             $value = $_POST[$field['name']];
@@ -142,10 +154,10 @@ class SmartMetaBox {
 
         echo "<table class='form-table'>";
         foreach ( $this->properties['fields'] as $field ) {
-            if ( in_array( $field['name'], $custom_keys ) ) {
+            if ( $custom_keys && in_array( $field['name'], $custom_keys ) ) {
                 $value = get_post_meta( $post->ID, $field['name'], true );
             } else {
-                $value;
+                $value = '';
             }
             echo "<tr>";
             echo "  <td>";
@@ -156,6 +168,28 @@ class SmartMetaBox {
             echo "  <td>";
             if ( $field['type'] == "richtext" ) {
                 echo "      <textarea class='theEditor' name='{$field['name']}' rows='5' cols='30'>{$value}</textarea>";
+                echo "      {$field['desc']}";
+            } else if ( $field['type'] == "media_file" ) {
+?>
+                <script language="JavaScript">
+                    jQuery(document).ready(function() {
+                        jQuery('#<?php echo $field['name']; ?>_button').click(function() {
+                            formfield = jQuery('#<?php echo $field['name']; ?>').attr('name');
+                            tb_show('', 'media-upload.php?type=image&TB_iframe=true');
+                            return false;
+                        });
+
+                        window.send_to_editor = function(html) {
+                            imgurl = jQuery('img',html).attr('src');
+                            jQuery('#<?php echo $field['name']; ?>').val(imgurl);
+                            tb_remove();
+                        }
+                    });
+                </script>
+
+    <?php
+                echo "      <input type='{$field['type']}' name='{$field['name']}' id='{$field['name']}' value='{$value}'/>";
+                echo "       <input id='{$field['name']}_button' type='button' value='Upload Image' />";
                 echo "      {$field['desc']}";
             } else {
                 echo "      <input type='{$field['type']}' name='{$field['name']}' size='{$field['size']}' value='{$value}' />";
