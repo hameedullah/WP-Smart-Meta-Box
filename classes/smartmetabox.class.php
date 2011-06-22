@@ -104,6 +104,7 @@ class SmartMetaBox {
 
     function add_smart_meta_box() {
         global $post;
+        if ( !$post ) return;
         if ( $this->post_ids ) {
             if ( !in_array( $post->ID, $this->post_ids ) )
                 return false;
