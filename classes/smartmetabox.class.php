@@ -33,7 +33,8 @@ class SmartMetaBox {
         'callback' => '',
         'callback_args' => null,
         'context' => 'advanced',
-        'priority' => 'default'
+        'priority' => 'default',
+        '_max_sub_fields' => 1
     );
 
     private $allowed_contexts = array( 'normal', 'advanced', 'side' );
@@ -43,10 +44,14 @@ class SmartMetaBox {
 
     function __construct( $meta_box=null ) {
         $this->properties = $meta_box;
-        self::$meta_box_count += 1;
         $this->instances = 0;
+
+        $this->_id = self::$meta_box_count;
+
         $this->setup_properties();
         $this->setup_hooks();
+
+        self::$meta_box_count += 1;
     }
 
     function setup_properties() {
@@ -55,6 +60,14 @@ class SmartMetaBox {
         foreach ( $properties as $property => $value ) {
             $this->{$property} = $value;
         }
+
+        $number_of_fields = count( $this->fields );
+        $this->fields = array_map( 
+            create_function( '$field, $meta_box', 'return new SmartMetaBoxField($field, $meta_box);' ),
+            $this->fields,
+            array_fill( 0, $number_of_fields, $this )
+        );
+
     }
 
     function sanitize_properties( $properties ) {
@@ -63,11 +76,11 @@ class SmartMetaBox {
         }
 
         if ( empty( $properties['id'] ) || !is_string( $properties['id'] ) ) {
-            $properties['id'] = $this->default_properties['prefix'] . self::$meta_box_count;
+            $properties['id'] = $this->default_properties['prefix'] . $this->_id;
         }
 
         if ( empty( $properties['title'] ) || !is_string( $properties['title'] ) ) {
-            $properties['title'] = $this->default_properties['title'] . self::$meta_box_count;
+            $properties['title'] = $this->default_properties['title'] . $this->_id;
         }
 
         if ( !is_array( $properties['pages'] ) ) {
@@ -141,9 +154,8 @@ class SmartMetaBox {
         }
 
 
-        foreach ( $this->properties['fields'] as $field ) {
-            $value = $_POST[$field['name']];
-            update_post_meta( $post_id, $field['name'], $value );
+        foreach ( $this->fields as $field ) {
+            $field->save_value( $post_id );
         }
     }
 
@@ -151,55 +163,21 @@ class SmartMetaBox {
         global $post;
         wp_nonce_field( basename( __FILE__ ), $this->prefix . 'nonce_field' );
 
-        $custom_keys = get_post_custom_keys( $post->ID );
+        // so invidual fields can pick their values
+        $this->custom_keys = get_post_custom_keys( $post->ID );
 
         echo "<table class='form-table'>";
-        foreach ( $this->properties['fields'] as $field ) {
-            if ( $custom_keys && in_array( $field['name'], $custom_keys ) ) {
-                $value = get_post_meta( $post->ID, $field['name'], true );
-            } else {
-                $value = '';
-            }
-            echo "<tr>";
-            echo "  <td>";
-            echo "     <label for='{$field['name']}'>";
-            echo          $field['label'];
-            echo "      </label>";
-            echo "  </td>";
-            echo "  <td>";
-            if ( $field['type'] == "richtext" ) {
-                echo "      <textarea class='theEditor' name='{$field['name']}' rows='5' cols='30'>{$value}</textarea>";
-                echo "      {$field['desc']}";
-            } else if ( $field['type'] == "media_file" ) {
-?>
-                <script language="JavaScript">
-                    jQuery(document).ready(function() {
-                        jQuery('#<?php echo $field['name']; ?>_button').click(function() {
-                            formfield = jQuery('#<?php echo $field['name']; ?>').attr('name');
-                            tb_show('', 'media-upload.php?type=image&TB_iframe=true');
-                            return false;
-                        });
-
-                        window.send_to_editor = function(html) {
-                            imgurl = jQuery('img',html).attr('src');
-                            jQuery('#<?php echo $field['name']; ?>').val(imgurl);
-                            tb_remove();
-                        }
-                    });
-                </script>
-
-    <?php
-                echo "      <input type='{$field['type']}' name='{$field['name']}' id='{$field['name']}' value='{$value}'/>";
-                echo "       <input id='{$field['name']}_button' type='button' value='Upload Image' />";
-                echo "      {$field['desc']}";
-            } else {
-                echo "      <input type='{$field['type']}' name='{$field['name']}' size='{$field['size']}' value='{$value}' />";
-                echo "      {$field['desc']}";
-            }
-            echo "  </td>";
-            echo "</tr>";
+        foreach ( $this->fields as $field ) {
+            //$field = new SmartMetaBoxField( $field, $this );
+            $field->render();
         }
         echo "</table>";
+    }
+
+    function register_max_sub_fields_num( $total_sub_fields ) {
+        if ( $total_sub_fields > $this->_max_sub_fields ) {
+            $this->_max_sub_fields = $total_sub_fields;
+        }
     }
 }
 ?>
