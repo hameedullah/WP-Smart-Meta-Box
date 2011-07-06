@@ -149,7 +149,7 @@ class SmartMetaBox {
 
 		if ( $this->save_callback ) {
 			$args = array( $post_id, $post, $this->fields );
-			call_user_func( $this->save_callback );
+			call_user_func_array( $this->save_callback, $args );
 		}
     }
 
