@@ -99,7 +99,7 @@ class SmartMetaBox {
 
     function setup_hooks() {
         add_action( 'add_meta_boxes', array( $this, 'add_smart_meta_box' ) );
-        add_action( 'save_post', array( $this, 'save_smart_meta_box_data' ) );
+        add_action( 'save_post', array( $this, 'save_smart_meta_box_data' ), 10, 2 );
     }
 
     function add_smart_meta_box() {
@@ -128,7 +128,7 @@ class SmartMetaBox {
         }
     }
 
-    function save_smart_meta_box_data( $post_id ) {
+    function save_smart_meta_box_data( $post_id, $post ) {
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
             return;
 
@@ -145,6 +145,7 @@ class SmartMetaBox {
             $value = $_POST[$field['name']];
             update_post_meta( $post_id, $field['name'], $value );
         }
+
     }
 
     function render_smart_meta_box() {
