@@ -32,6 +32,7 @@ class SmartMetaBox {
         'post_slugs' => array(),
         'callback' => '',
         'callback_args' => null,
+		'save_callback' => '',
         'context' => 'advanced',
         'priority' => 'default'
     );
@@ -146,6 +147,10 @@ class SmartMetaBox {
             update_post_meta( $post_id, $field['name'], $value );
         }
 
+		if ( $this->save_callback ) {
+			$args = array( $post_id, $post, $this->fields );
+			call_user_func( $this->save_callback );
+		}
     }
 
     function render_smart_meta_box() {
