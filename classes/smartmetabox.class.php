@@ -33,6 +33,7 @@ class SmartMetaBox {
         'post_slugs' => array(),
         'callback' => '',
         'callback_args' => null,
+		'save_callback' => '',
         'context' => 'advanced',
         'priority' => 'default',
         '_max_sub_fields' => 1
@@ -113,7 +114,7 @@ class SmartMetaBox {
 
     function setup_hooks() {
         add_action( 'add_meta_boxes', array( $this, 'add_smart_meta_box' ) );
-        add_action( 'save_post', array( $this, 'save_smart_meta_box_data' ) );
+        add_action( 'save_post', array( $this, 'save_smart_meta_box_data' ), 10, 2 );
     }
 
     function add_smart_meta_box() {
@@ -142,7 +143,7 @@ class SmartMetaBox {
         }
     }
 
-    function save_smart_meta_box_data( $post_id ) {
+    function save_smart_meta_box_data( $post_id, $post ) {
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
             return;
 
@@ -158,6 +159,11 @@ class SmartMetaBox {
         foreach ( $this->fields as $field ) {
             $field->save_value( $post_id );
         }
+
+		if ( $this->save_callback ) {
+			$args = array( $post_id, $post, $this->fields );
+			call_user_func_array( $this->save_callback, $args );
+		}
     }
 
     function render_smart_meta_box() {
