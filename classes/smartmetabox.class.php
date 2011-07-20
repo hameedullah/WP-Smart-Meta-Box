@@ -1,5 +1,6 @@
 <?php
 
+if ( ! class_exists( 'SmartMetaBox' ) ) :
 class SmartMetaBox {
 
     protected $prefix;
@@ -180,4 +181,5 @@ class SmartMetaBox {
         }
     }
 }
+endif; // end if class SmartMetaBox exists
 ?>

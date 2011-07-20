@@ -1,5 +1,6 @@
 <?php
 
+if ( ! class_exists( 'SmartMetaBoxField' ) ) :
 class SmartMetaBoxField {
     /* TODO: Add support for multi value meta keys ;)
      * TODO: Add Taxonomies support
@@ -167,3 +168,4 @@ class SmartMetaBoxField {
         }
     }
 }
+endif; // end if class SmartMetaBoxField exists
