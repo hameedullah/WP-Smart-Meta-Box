@@ -40,6 +40,7 @@ class SmartMetaBox {
 		'save_callback' => '',
         'context' => 'advanced',
         'priority' => 'default',
+		'collapsed' => false,
         '_max_sub_fields' => 1
     );
 
@@ -144,8 +145,21 @@ class SmartMetaBox {
                 $this->priority,
                 $this->callback_args
             );
+			if ( $this->collapsed === true ) {
+				$this->collapse_smart_meta_box( $page );
+			}
         }
     }
+
+	function collapse_smart_meta_box( $page ) {
+		global $user_ID;
+		get_currentuserinfo();
+		$option = "closedpostboxes_$page";
+		$close_ids = get_user_option( $option, $user_ID, true );
+		$close_ids[] = $this->id;
+		$close_ids = array_unique( $close_ids );
+		update_user_option( $user_ID, $option, $close_ids, true );
+	}
 
     function save_smart_meta_box_data( $post_id, $post ) {
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
