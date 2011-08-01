@@ -170,8 +170,6 @@ class SmartMetaBoxField {
     }
 
 	public function setup_hooks() {
-		global $wp_filter;
-		_debug( $wp_filter['admin_head'] );
 		add_action( 'admin_head', array( &$this, 'tinymce_js' ) );
 	}
 
