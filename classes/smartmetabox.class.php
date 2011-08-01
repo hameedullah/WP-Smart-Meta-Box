@@ -3,6 +3,10 @@
 if ( ! class_exists( 'SmartMetaBox' ) ) :
 class SmartMetaBox {
 
+	/*
+	 * TODO: Add support for collapsable/hidden meta boxes
+	 */
+
     protected $prefix;
     protected $id;
     protected $title;
