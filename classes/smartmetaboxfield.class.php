@@ -60,6 +60,9 @@ class SmartMetaBoxField {
             // set the global counter to the new field number
             self::$field_count = $field_number;
         }
+
+		$this->setup_hooks();
+
     }
 
     function setup_properties() {
@@ -111,13 +114,11 @@ class SmartMetaBoxField {
         echo "  <td$col_span>";
         if ( $this->type == "richtext" ) {
             /* FIX: the default editor media upload box adds images to the smartmetabox richtext editor
+			 * TODO: Add show/hide toggle button support
+			 * TODO: Add support for default visual editor state
              */
+			echo "<a href='#' onclick='smb_enabletinymce(\"$this->name\"); return false;'>Toggle Visual Editor</a><br />";
             echo "      <textarea class='smartCustomEditor' id='{$this->name}' name='{$this->name}' rows='5' cols='30'>{$this->value}</textarea>";
-            echo "<script type='text/javascript'>
-                jQuery(document).ready(function() {
-                tinyMCE.execCommand('mceAddControl', false, '$this->name');
-                });
-            </script>";
         } else if ( $this->type == "post_editor" ) {
             /* TODO: Add the media buttons option, i.e 4th argument to the_editor 
              */
@@ -167,5 +168,33 @@ class SmartMetaBoxField {
             update_post_meta( $post_id, $this->name, $value );
         }
     }
+
+	public function setup_hooks() {
+		global $wp_filter;
+		_debug( $wp_filter['admin_head'] );
+		add_action( 'admin_head', array( &$this, 'tinymce_js' ) );
+	}
+
+	public function tinymce_js() {
+?>
+		<script type='text/javascript'>
+				function smb_enabletinymce(id) {
+					    jQuery('#' + id).addClass("mceEditor");
+						tinyMCE.settings = {
+							theme: 'advanced',
+							mode: 'none',
+								theme_advanced_layout_manager: 'SimpleLayout',
+								theme_advanced_toolbar_location: 'top',
+								theme_advanced_toolbar_align: 'left',
+								theme_advanced_buttons1: 'bold,italic,underline,strikethrough,|,bullist,numlist,|,outdent,indent',
+								theme_advanced_buttons2: '',
+								theme_advanced_buttons3: ''
+						};
+
+					tinyMCE.execCommand('mceToggleEditor', false,  id);
+				}
+            </script>
+	<?php 
+	}
 }
 endif; // end if class SmartMetaBoxField exists
