@@ -149,6 +149,26 @@ class SmartMetaBoxField {
             echo "       <input id='{$this->name}_button' type='button' value='Upload Image' />";
         } else if ( $this->type == "textarea" ) {
             echo "      <textarea id='{$this->name}' name='{$this->name}' rows='{$this->rows}' cols='{$this->cols}'>{$this->value}</textarea>";
+        } else if ( $this->type == "dropdown" ) {
+			if ( $this->dynamic_fill ) {
+				$values = apply_filters( 'wsmb_dynamic_fill_' . $this->name, array() );
+			} else {
+				$values = $this->options;
+			}
+
+			$selected = '';
+
+            echo "      <select id='{$this->name}' name='{$this->name}' style='width: {$this->size}px;'>";
+			foreach ( $values as $item_key => $item_value ) {
+				if ( $item_key == $this->value ) {
+					$selected = " selected='selected'";
+				} else {
+					$selected = '';
+				}
+				echo "       <option value='{$item_key}'$selected>{$item_value}</option>";
+			}
+            echo "      </select>";
+
         } else {
             echo "      <input type='{$this->type}' name='{$this->name}' size='{$this->size}' value='{$this->value}' />";
         }
